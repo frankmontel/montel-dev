@@ -1,0 +1,21 @@
+export default function HeroSection() {
+  return (
+    <section className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-indigo-950 px-6 text-center">
+      <p className="text-sm uppercase tracking-widest text-indigo-400 mb-4">
+        Welcome to my portfolio
+      </p>
+      <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+        Frank Montel
+      </h1>
+      <p className="mt-4 text-xl md:text-2xl text-gray-400 max-w-2xl">
+        Developer, builder, and creator — crafting thoughtful software and elegant solutions.
+      </p>
+      <a
+        href="#about"
+        className="mt-10 inline-block px-8 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors font-semibold text-white"
+      >
+        View my work
+      </a>
+    </section>
+  );
+}
