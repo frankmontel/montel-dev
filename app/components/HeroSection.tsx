@@ -5,10 +5,10 @@ export default function HeroSection() {
         Welcome to my portfolio
       </p>
       <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-        Frank Montel
+        Frank J. Montel IV
       </h1>
       <p className="mt-4 text-xl md:text-2xl text-gray-400 max-w-2xl">
-        Developer, builder, and creator — crafting thoughtful software and elegant solutions.
+        Enterprise data and technology leader.
       </p>
       <a
         href="#about"
