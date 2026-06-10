@@ -16,7 +16,7 @@ export default function ContactSection() {
       <div className="flex items-center justify-center gap-6 mt-8">
         {/* GitHub */}
         <a
-          href="https://github.com"
+          href="https://github.com/frankmontel"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub"
