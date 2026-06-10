@@ -28,7 +28,7 @@ export default function ContactSection() {
         </a>
         {/* LinkedIn */}
         <a
-          href="https://linkedin.com"
+          href="https://linkedin.com/in/frankmontel"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="LinkedIn"
