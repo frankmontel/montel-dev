@@ -144,7 +144,7 @@ export const resume = {
     institution: "Grand Valley State University",
     graduated: "Aug 2011",
     notes:
-      "GPA 3.4, Economic Honors Society. Economics Capstone: Hedonic price model on hundreds of thousands of Des Moines, IA real-estate transactions using multivariate regression in STATA to predict the increase in overall home value different home renovations would have.",
+      "Economic Honors Society. Economics Capstone: Hedonic price model on hundreds of thousands of Des Moines, IA real-estate transactions using multivariate regression in STATA to predict the increase in overall home value different home renovations would have.",
   },
   additionalCoursework: [
     "Data Engineering in Databricks",
