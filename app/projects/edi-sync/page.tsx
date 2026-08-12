@@ -1,0 +1,276 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "EDI Sync — Frank Montel",
+  description:
+    "Decoupling an EDI migration from a JD Edwards 8.12 → 9.2 upgrade with a metadata-driven SQL generator.",
+};
+
+const tech = [
+  "Python",
+  "pandas",
+  "SQL Server",
+  "T-SQL",
+  "IBM DB2 for i",
+  "DB2 SQL",
+  "SSIS",
+  "JD Edwards",
+];
+
+const facts = [
+  { label: "Procedures generated", value: "76" },
+  { label: "SQL dialects", value: "2" },
+  { label: "Time to build", value: "2 weeks" },
+  { label: "ERP upgrade delay", value: "None" },
+];
+
+const generatorCode = `import pandas
+
+data = pandas.read_csv(r'.\\TABLEDATA F47X.CSV')
+data['alias'] = data['field'].str[-4:]
+
+dbenv = 'JDE_PRODUCTION.PRODDTA'
+tablelist = data.table.unique()
+
+for table in tablelist:
+    print(r'CREATE or ALTER PROCEDURE Update' + table +
+          r' AS MERGE ' + dbenv + r'.' + table +
+          r' t USING EDISYNC.dbo.' + table + r' s ON (')
+
+    fieldlist = data.loc[(data['table'] == table)].field.unique().tolist()
+    keyfieldlist = data.loc[(data['table'] == table) &
+                            (data['iskey'] == 1)].field.unique().tolist()
+    nonkeyfieldlist = data.loc[(data['table'] == table) &
+                               (data['iskey'] == 0) &
+                               (data['is812'] == 1)].field.unique().tolist()
+    nonkeyfieldunmatchedlist = data.loc[(data['table'] == table) &
+                                        (data['iskey'] == 0) &
+                                        (data['is812'] == 0)].field.unique().tolist()
+    processedfield = data.loc[(data['table'] == table) &
+                              (data['alias'] == 'EDSP')].field.unique().tolist()[0]
+
+    # join on the key fields
+    keystring = ' and '.join('t.' + k + '=s.' + k for k in keyfieldlist)
+    print(keystring)
+
+    # only update rows the translator has not already flagged as processed
+    print(') WHEN MATCHED AND t.' + processedfield + "<>'Y' THEN UPDATE SET ")
+
+    # 8.12 has the column -> copy it; 9.2-only column -> default by datatype
+    ...`;
+
+const sqlSample = `----------------------------------------------------------------
+---F4706 BELJDEPS STORED PROCEDURE SOURCE FOR EDISYNC
+----------------------------------------------------------------
+
+CREATE or ALTER PROCEDURE UpdateF4706 AS MERGE JDE_PRODUCTION.PRODDTA.F4706 t USING EDISYNC.dbo.F4706 s ON (
+t.ZAEKCO=s.ZAEKCO and t.ZAEDOC=s.ZAEDOC and t.ZAEDCT=s.ZAEDCT and t.ZAEDLN=s.ZAEDLN and t.ZAFILE=s.ZAFILE and t.ZAANTY=s.ZAANTY
+) WHEN MATCHED AND t.ZAEDSP<>'Y' THEN UPDATE SET
+t.ZAEDTY=s.ZAEDTY, t.ZAEDSQ=s.ZAEDSQ, t.ZAEDSP=s.ZAEDSP, t.ZAEDBT=s.ZAEDBT, t.ZADOCO=s.ZADOCO,
+t.ZADCTO=s.ZADCTO, t.ZAKCOO=s.ZAKCOO, t.ZAAN8=s.ZAAN8, t.ZAMLNM=s.ZAMLNM, t.ZAADD1=s.ZAADD1,
+/* ... 20 more mapped columns ... */ t.ZAGAN8=0
+ WHEN NOT MATCHED THEN INSERT (
+ZAEDTY, ZAEDSQ, ZAEKCO, ZAEDOC, ZAEDCT, ZAEDLN, ZAEDSP, ZAEDBT, ZAFILE, ZADOCO, /* ... */ ZAGAN8
+) VALUES (
+s.ZAEDTY, s.ZAEDSQ, s.ZAEKCO, s.ZAEDOC, s.ZAEDCT, s.ZAEDLN, s.ZAEDSP, s.ZAEDBT, s.ZAFILE, s.ZADOCO, /* ... */ 0
+);`;
+
+function CodeBlock({ children }: { children: string }) {
+  return (
+    <pre className="mt-4 rounded-xl border border-gray-800 bg-gray-900 p-4 overflow-x-auto text-xs leading-relaxed text-gray-300 font-mono">
+      <code>{children}</code>
+    </pre>
+  );
+}
+
+function Heading({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-2xl font-bold mt-14 mb-4">{children}</h2>;
+}
+
+export default function EdiSyncPage() {
+  return (
+    <main className="px-6 py-20 max-w-3xl mx-auto">
+      <Link
+        href="/#projects"
+        className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+      >
+        &larr; Back to projects
+      </Link>
+
+      <p className="text-sm uppercase tracking-widest text-indigo-400 mt-10 mb-3">Case study</p>
+      <h1 className="text-4xl font-bold tracking-tight">EDI Sync</h1>
+      <p className="mt-4 text-lg text-gray-300 leading-relaxed">
+        Two metadata-driven code generators — one emitting T-SQL, one emitting DB2 SQL — that kept
+        a legacy EDI system in lockstep with a new Oracle JD Edwards environment, so a stalled EDI
+        migration could no longer hold the ERP upgrade hostage.
+      </p>
+
+      <div className="flex flex-wrap gap-2 mt-6">
+        {tech.map((t) => (
+          <span key={t} className="text-xs px-2 py-1 rounded-md bg-gray-800 text-gray-300">
+            {t}
+          </span>
+        ))}
+      </div>
+
+      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
+        {facts.map((fact) => (
+          <div
+            key={fact.label}
+            className="rounded-xl border border-gray-800 bg-gray-900 p-4 text-center"
+          >
+            <dt className="text-xs uppercase tracking-wide text-gray-500">{fact.label}</dt>
+            <dd className="text-2xl font-bold mt-1">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <Heading>The problem</Heading>
+      <div className="space-y-4 text-gray-300 leading-relaxed">
+        <p>
+          At Belwith, I was migrating our Oracle JD Edwards ERP from 8.12 to 9.2 and moving the
+          database from IBM DB2 to SQL Server at the same time. The IBM server also hosted our EDI
+          architecture, which was being migrated in a parallel project run by a colleague and an
+          external consulting group.
+        </p>
+        <p>
+          The two systems were tightly integrated and had to move together to work. My ERP
+          migration was on track. The EDI migration was not, and there was no reliable completion
+          date — which left my project in limbo. I needed to decouple the two so the upgrade could
+          move forward.
+        </p>
+      </div>
+
+      <Heading>The solution</Heading>
+      <div className="space-y-4 text-gray-300 leading-relaxed">
+        <p>
+          The EDI translator itself didn&apos;t need to migrate — only the data did. The translator
+          could stay on the old server indefinitely as long as its data was replicated into the new
+          one.
+        </p>
+        <p>Writing that replication by hand was a non-starter:</p>
+        <ul className="list-disc pl-6 space-y-2 marker:text-indigo-400">
+          <li>
+            Nobody in house fully understood the EDI system, so it wasn&apos;t obvious which tables
+            actually mattered.
+          </li>
+          <li>The field list differed between the old system and the new one.</li>
+          <li>
+            The procedures had to exist on <em>both</em> machines. SSIS only moved data as far as
+            a staging table; the load into production tables was a stored procedure that ran
+            locally on whichever server it landed on.
+          </li>
+          <li>
+            That meant two SQL dialects. The merge and update logic that worked on SQL Server
+            wasn&apos;t valid on DB2, and vice versa.
+          </li>
+          <li>
+            There was no time to hand-write, test, fix, and retest dozens of scripts — let alone
+            two dialects&apos; worth — before the cutover date.
+          </li>
+        </ul>
+        <p>
+          So instead of writing the scripts, I wrote the things that write the scripts. In two
+          weeks I built a pair of Python generators over one shared metadata definition: for each
+          table in our EDI library I described the field name, datatype, whether it&apos;s a key,
+          and whether it exists in 8.12 — and each generator turned that same description into a
+          complete merge procedure in its own dialect.
+        </p>
+        <p>
+          The semantics are identical on both sides. Match on the key fields; update rows the
+          translator hasn&apos;t already flagged as processed
+          (<code className="text-gray-200 font-mono text-sm">EDSP &lt;&gt; &apos;Y&apos;</code>);
+          insert rows that don&apos;t exist yet; supply type-appropriate defaults for columns the
+          source doesn&apos;t have. The syntax is not. The two platforms disagree on how a
+          procedure is declared and wrapped, how objects are qualified across databases and
+          libraries, and what&apos;s legal inside the statement body — so the emitted text diverges
+          substantially even though the intent is line-for-line the same.
+        </p>
+        <p>
+          Keeping the divergence in the generators rather than in the SQL is what made this
+          tractable. A change to the sync logic — a new default, a corrected key — was one edit to
+          the metadata or the emitter, then a regeneration of both sides. There was never a moment
+          where the SQL Server procedures and the DB2 procedures could drift apart by hand.
+        </p>
+        <p>
+          That covered 38 tables in each dialect — 76 stored procedures in total. The split of
+          responsibility was deliberate: SSIS (today this would be Fabric Data Factory or similar)
+          handled only transport, landing rows in staging tables on both machines. From there, a
+          generated procedure running locally on each server merged staging into the production
+          tables. Nothing crossed the machine boundary except the raw rows, and all the reconciling
+          logic — key matching, the processed-flag guard, the defaults — lived on the side that
+          owned the destination table.
+        </p>
+      </div>
+
+      <Heading>Architecture</Heading>
+      <div className="rounded-2xl border border-gray-800 bg-white p-4 overflow-hidden">
+        <Image
+          src="/projects/edi-sync-architecture.png"
+          alt="EDI coexistence during the JDE 8.12 to 9.2 and iSeries to SQL Server cutover: trading partners feed the OpenText translator on the legacy IBM i, SSIS captures PRODDTA changes into EDISYNC staging tables, and generated merge procedures load them into PRODDTA on the new SQL Server, with a reverse outbound path."
+          width={1845}
+          height={928}
+          className="w-full h-auto"
+        />
+      </div>
+      <p className="mt-3 text-sm text-gray-500">
+        The translator stayed on the iSeries; SSIS bridged the two ERPs on a schedule, and the
+        generated procedures handled the staging &rarr; production merge.
+      </p>
+
+      <Heading>The generators</Heading>
+      <p className="text-gray-300 leading-relaxed">
+        Both generators read the same metadata and share the same shape: walk the tables, split
+        each table&apos;s fields into keys, mapped non-keys, and unmatched non-keys, then emit a
+        procedure. What differs is the text each one prints — the procedure declaration, the object
+        qualification, and the statement structure are dialect-specific.
+      </p>
+      <p className="text-gray-300 leading-relaxed mt-4">
+        The T-SQL core loop, abridged:
+      </p>
+      <CodeBlock>{generatorCode}</CodeBlock>
+      <a
+        href="/projects/edisync-sp-generator.py"
+        className="inline-block mt-4 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+      >
+        View the full T-SQL generator script &rarr;
+      </a>
+
+      <Heading>Generated output</Heading>
+      <p className="text-gray-300 leading-relaxed">
+        One of the SQL Server procedures, trimmed for length — it merges the
+        <code className="text-gray-200 font-mono text-sm"> EDISYNC.dbo </code> staging table into
+        the production <code className="text-gray-200 font-mono text-sm"> PRODDTA </code> table on
+        the same server. The DB2 generator produced its counterpart for the staging &rarr;
+        production load on the iSeries. The T-SQL set alone ran to roughly 175,000 characters.
+      </p>
+      <CodeBlock>{sqlSample}</CodeBlock>
+
+      <Heading>The result</Heading>
+      <div className="space-y-4 text-gray-300 leading-relaxed">
+        <p>The JD Edwards migration and upgrade proceeded on schedule.</p>
+        <p>
+          Our EDI business — more than half of our sales orders, plus dock reports and inventory
+          reports for our largest customers — kept processing on the legacy system, with data
+          flowing into the new Oracle environment without issue.
+        </p>
+        <p>
+          The EDI project ran for more than another year after that. Without this bridge, we
+          couldn&apos;t have delivered the stability and functionality gains of the Oracle upgrade
+          to the business on any predictable timeline.
+        </p>
+      </div>
+
+      <div className="mt-16 pt-8 border-t border-gray-800">
+        <Link
+          href="/#projects"
+          className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+        >
+          &larr; Back to projects
+        </Link>
+      </div>
+    </main>
+  );
+}

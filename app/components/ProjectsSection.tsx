@@ -1,35 +1,21 @@
+import Link from "next/link";
+
 type Project = {
   title: string;
   description: string;
   tech: string[];
-  githubUrl: string;
-  liveUrl: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  caseStudyUrl?: string;
 };
 
 const projects: Project[] = [
   {
-    title: "Project Alpha",
+    title: "EDI Sync",
     description:
-      "A full-stack web application with real-time collaboration features, built with Next.js and PostgreSQL.",
-    tech: ["Next.js", "TypeScript", "PostgreSQL"],
-    githubUrl: "#",
-    liveUrl: "#",
-  },
-  {
-    title: "Project Beta",
-    description:
-      "A developer CLI tool that automates repetitive tasks and integrates with popular CI/CD pipelines.",
-    tech: ["Node.js", "TypeScript", "Docker"],
-    githubUrl: "#",
-    liveUrl: "#",
-  },
-  {
-    title: "Project Gamma",
-    description:
-      "A RESTful API service with authentication, rate limiting, and comprehensive OpenAPI documentation.",
-    tech: ["Python", "PostgreSQL", "AWS"],
-    githubUrl: "#",
-    liveUrl: "#",
+      "A pair of metadata-driven Python generators — one emitting T-SQL, one emitting DB2 SQL — that wrote 76 merge procedures for both ends of a live ERP cutover, keeping a legacy EDI system in sync with a new JD Edwards 9.2 environment and decoupling a stalled EDI migration from an upgrade that shipped on schedule.",
+    tech: ["Python", "SQL Server", "IBM DB2", "SSIS", "JD Edwards"],
+    caseStudyUrl: "/projects/edi-sync",
   },
 ];
 
@@ -57,18 +43,30 @@ export default function ProjectsSection() {
               ))}
             </div>
             <div className="flex gap-3 mt-5">
-              <a
-                href={project.githubUrl}
-                className="text-sm px-4 py-1.5 rounded-full border border-gray-700 hover:border-indigo-500 transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href={project.liveUrl}
-                className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
-              >
-                Live Demo
-              </a>
+              {project.githubUrl && (
+                <a
+                  href={project.githubUrl}
+                  className="text-sm px-4 py-1.5 rounded-full border border-gray-700 hover:border-indigo-500 transition-colors"
+                >
+                  GitHub
+                </a>
+              )}
+              {project.liveUrl && (
+                <a
+                  href={project.liveUrl}
+                  className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                >
+                  Live Demo
+                </a>
+              )}
+              {project.caseStudyUrl && (
+                <Link
+                  href={project.caseStudyUrl}
+                  className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                >
+                  Read case study
+                </Link>
+              )}
             </div>
           </div>
         ))}
