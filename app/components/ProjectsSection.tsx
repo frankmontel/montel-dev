@@ -1,12 +1,22 @@
+import Link from "next/link";
+
 type Project = {
   title: string;
   description: string;
   tech: string[];
-  githubUrl: string;
-  liveUrl: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  caseStudyUrl?: string;
 };
 
 const projects: Project[] = [
+  {
+    title: "EDI Sync",
+    description:
+      "A metadata-driven Python generator that wrote 38 T-SQL MERGE procedures to keep a legacy EDI system in sync with a new JD Edwards 9.2 environment — decoupling a stalled EDI migration from an ERP upgrade that shipped on schedule.",
+    tech: ["Python", "SQL Server", "SSIS", "JD Edwards"],
+    caseStudyUrl: "/projects/edi-sync",
+  },
   {
     title: "Project Alpha",
     description:
@@ -57,18 +67,30 @@ export default function ProjectsSection() {
               ))}
             </div>
             <div className="flex gap-3 mt-5">
-              <a
-                href={project.githubUrl}
-                className="text-sm px-4 py-1.5 rounded-full border border-gray-700 hover:border-indigo-500 transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href={project.liveUrl}
-                className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
-              >
-                Live Demo
-              </a>
+              {project.githubUrl && (
+                <a
+                  href={project.githubUrl}
+                  className="text-sm px-4 py-1.5 rounded-full border border-gray-700 hover:border-indigo-500 transition-colors"
+                >
+                  GitHub
+                </a>
+              )}
+              {project.liveUrl && (
+                <a
+                  href={project.liveUrl}
+                  className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                >
+                  Live Demo
+                </a>
+              )}
+              {project.caseStudyUrl && (
+                <Link
+                  href={project.caseStudyUrl}
+                  className="text-sm px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                >
+                  Read case study
+                </Link>
+              )}
             </div>
           </div>
         ))}
