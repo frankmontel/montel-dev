@@ -13,7 +13,7 @@ const projects: Project[] = [
   {
     title: "EDI Sync",
     description:
-      "A pair of metadata-driven Python generators — one emitting T-SQL, one emitting DB2 SQL — that wrote the merge procedures for both ends of a live ERP cutover, keeping a legacy EDI system in sync with a new JD Edwards 9.2 environment and decoupling a stalled EDI migration from an upgrade that shipped on schedule.",
+      "A pair of metadata-driven Python generators — one emitting T-SQL, one emitting DB2 SQL — that wrote 76 merge procedures for both ends of a live ERP cutover, keeping a legacy EDI system in sync with a new JD Edwards 9.2 environment and decoupling a stalled EDI migration from an upgrade that shipped on schedule.",
     tech: ["Python", "SQL Server", "IBM DB2", "SSIS", "JD Edwards"],
     caseStudyUrl: "/projects/edi-sync",
   },

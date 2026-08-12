@@ -20,7 +20,7 @@ const tech = [
 ];
 
 const facts = [
-  { label: "Tables in scope", value: "38" },
+  { label: "Procedures generated", value: "76" },
   { label: "SQL dialects", value: "2" },
   { label: "Time to build", value: "2 weeks" },
   { label: "ERP upgrade delay", value: "None" },
@@ -158,8 +158,9 @@ export default function EdiSyncPage() {
           </li>
           <li>The field list differed between the old system and the new one.</li>
           <li>
-            The procedures had to exist on <em>both</em> machines — the sync ran in both
-            directions, so neither side could be treated as a read-only source.
+            The procedures had to exist on <em>both</em> machines. SSIS only moved data as far as
+            a staging table; the load into production tables was a stored procedure that ran
+            locally on whichever server it landed on.
           </li>
           <li>
             That meant two SQL dialects. The merge and update logic that worked on SQL Server
@@ -194,9 +195,13 @@ export default function EdiSyncPage() {
           where the SQL Server procedures and the DB2 procedures could drift apart by hand.
         </p>
         <p>
-          That covered 38 tables, with a procedure generated per table per platform. I deployed
-          them on both servers and used SSIS (today this would be Fabric Data Factory or similar)
-          to run them on a schedule, keeping the two systems in sync.
+          That covered 38 tables in each dialect — 76 stored procedures in total. The split of
+          responsibility was deliberate: SSIS (today this would be Fabric Data Factory or similar)
+          handled only transport, landing rows in staging tables on both machines. From there, a
+          generated procedure running locally on each server merged staging into the production
+          tables. Nothing crossed the machine boundary except the raw rows, and all the reconciling
+          logic — key matching, the processed-flag guard, the defaults — lived on the side that
+          owned the destination table.
         </p>
       </div>
 
@@ -235,9 +240,11 @@ export default function EdiSyncPage() {
 
       <Heading>Generated output</Heading>
       <p className="text-gray-300 leading-relaxed">
-        One of the SQL Server procedures, trimmed for length. The DB2 generator produced the
-        matching procedure for the other end of the sync. The T-SQL set alone ran to roughly
-        175,000 characters.
+        One of the SQL Server procedures, trimmed for length — it merges the
+        <code className="text-gray-200 font-mono text-sm"> EDISYNC.dbo </code> staging table into
+        the production <code className="text-gray-200 font-mono text-sm"> PRODDTA </code> table on
+        the same server. The DB2 generator produced its counterpart for the staging &rarr;
+        production load on the iSeries. The T-SQL set alone ran to roughly 175,000 characters.
       </p>
       <CodeBlock>{sqlSample}</CodeBlock>
 
