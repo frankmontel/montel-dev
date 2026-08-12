@@ -1,3 +1,10 @@
+export type SkillGroup = {
+  category: string;
+  items: string[];
+  /** Trailing qualifier rendered after the list, e.g. "familiar with Snowflake". */
+  note?: string;
+};
+
 export const resume = {
   name: "Frank J Montel IV",
   location: "Lansing, MI (willing to relocate)",
@@ -11,20 +18,45 @@ export const resume = {
   skills: [
     {
       category: "Platforms & Tools",
-      items:
-        "Microsoft Fabric, Power BI, Azure, Databricks, SQL Server, Tableau, Python, IBM DB2, Jira, Confluence; familiar with Snowflake",
+      items: [
+        "Microsoft Fabric",
+        "Power BI",
+        "Azure",
+        "Databricks",
+        "SQL Server",
+        "Tableau",
+        "Python",
+        "IBM DB2",
+        "Jira",
+        "Confluence",
+      ],
+      note: "familiar with Snowflake",
     },
     {
       category: "Data & Architecture",
-      items:
-        "Medallion datalakes, data warehousing, data virtualization, multi-source integration, star-schema and AI-ready data modeling, semantic models and ontologies",
+      items: [
+        "Medallion datalakes",
+        "data warehousing",
+        "data virtualization",
+        "multi-source integration",
+        "star-schema and AI-ready data modeling",
+        "semantic models and ontologies",
+      ],
     },
     {
       category: "Delivery & Governance",
-      items:
-        "CI/CD, GitHub, data security, regulated data protection, Agile (Scrum & Kanban), portfolio and budget oversight, vendor management, executive communication",
+      items: [
+        "CI/CD",
+        "GitHub",
+        "data security",
+        "regulated data protection",
+        "Agile (Scrum & Kanban)",
+        "portfolio and budget oversight",
+        "vendor management",
+        "executive communication",
+      ],
     },
-  ],
+  ] as SkillGroup[],
   experience: [
     {
       title: "Manager, Data Analytics",

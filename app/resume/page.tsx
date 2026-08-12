@@ -64,7 +64,10 @@ export default function ResumePage() {
             {resume.skills.map((s) => (
               <div key={s.category} className="grid grid-cols-[160px_1fr] gap-3 text-sm print:grid-cols-[140px_1fr]">
                 <dt className="font-semibold text-gray-200 print:text-gray-900 shrink-0">{s.category}</dt>
-                <dd className="text-gray-400 leading-relaxed print:text-gray-700">{s.items}</dd>
+                <dd className="text-gray-400 leading-relaxed print:text-gray-700">
+                  {s.items.join(", ")}
+                  {s.note ? `; ${s.note}` : ""}
+                </dd>
               </div>
             ))}
           </dl>
