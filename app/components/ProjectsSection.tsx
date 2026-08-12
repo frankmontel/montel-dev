@@ -13,33 +13,9 @@ const projects: Project[] = [
   {
     title: "EDI Sync",
     description:
-      "A metadata-driven Python generator that wrote 38 T-SQL MERGE procedures to keep a legacy EDI system in sync with a new JD Edwards 9.2 environment — decoupling a stalled EDI migration from an ERP upgrade that shipped on schedule.",
-    tech: ["Python", "SQL Server", "SSIS", "JD Edwards"],
+      "A pair of metadata-driven Python generators — one emitting T-SQL, one emitting DB2 SQL — that wrote the merge procedures for both ends of a live ERP cutover, keeping a legacy EDI system in sync with a new JD Edwards 9.2 environment and decoupling a stalled EDI migration from an upgrade that shipped on schedule.",
+    tech: ["Python", "SQL Server", "IBM DB2", "SSIS", "JD Edwards"],
     caseStudyUrl: "/projects/edi-sync",
-  },
-  {
-    title: "Project Alpha",
-    description:
-      "A full-stack web application with real-time collaboration features, built with Next.js and PostgreSQL.",
-    tech: ["Next.js", "TypeScript", "PostgreSQL"],
-    githubUrl: "#",
-    liveUrl: "#",
-  },
-  {
-    title: "Project Beta",
-    description:
-      "A developer CLI tool that automates repetitive tasks and integrates with popular CI/CD pipelines.",
-    tech: ["Node.js", "TypeScript", "Docker"],
-    githubUrl: "#",
-    liveUrl: "#",
-  },
-  {
-    title: "Project Gamma",
-    description:
-      "A RESTful API service with authentication, rate limiting, and comprehensive OpenAPI documentation.",
-    tech: ["Python", "PostgreSQL", "AWS"],
-    githubUrl: "#",
-    liveUrl: "#",
   },
 ];
 

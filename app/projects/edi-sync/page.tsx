@@ -8,12 +8,21 @@ export const metadata: Metadata = {
     "Decoupling an EDI migration from a JD Edwards 8.12 → 9.2 upgrade with a metadata-driven SQL generator.",
 };
 
-const tech = ["Python", "pandas", "SQL Server", "T-SQL MERGE", "SSIS", "IBM DB2", "JD Edwards"];
+const tech = [
+  "Python",
+  "pandas",
+  "SQL Server",
+  "T-SQL",
+  "IBM DB2 for i",
+  "DB2 SQL",
+  "SSIS",
+  "JD Edwards",
+];
 
 const facts = [
-  { label: "Procedures generated", value: "38" },
+  { label: "Tables in scope", value: "38" },
+  { label: "SQL dialects", value: "2" },
   { label: "Time to build", value: "2 weeks" },
-  { label: "Sales orders via EDI", value: "50%+" },
   { label: "ERP upgrade delay", value: "None" },
 ];
 
@@ -93,9 +102,9 @@ export default function EdiSyncPage() {
       <p className="text-sm uppercase tracking-widest text-indigo-400 mt-10 mb-3">Case study</p>
       <h1 className="text-4xl font-bold tracking-tight">EDI Sync</h1>
       <p className="mt-4 text-lg text-gray-300 leading-relaxed">
-        A metadata-driven code generator that kept a legacy EDI system in lockstep with a new
-        Oracle JD Edwards environment — so a stalled EDI migration could no longer hold the ERP
-        upgrade hostage.
+        Two metadata-driven code generators — one emitting T-SQL, one emitting DB2 SQL — that kept
+        a legacy EDI system in lockstep with a new Oracle JD Edwards environment, so a stalled EDI
+        migration could no longer hold the ERP upgrade hostage.
       </p>
 
       <div className="flex flex-wrap gap-2 mt-6">
@@ -148,26 +157,46 @@ export default function EdiSyncPage() {
             actually mattered.
           </li>
           <li>The field list differed between the old system and the new one.</li>
-          <li>The merge/update logic differed between DB2 and SQL Server.</li>
           <li>
-            There was no time to hand-write, test, fix, and retest dozens of scripts before the
-            cutover date.
+            The procedures had to exist on <em>both</em> machines — the sync ran in both
+            directions, so neither side could be treated as a read-only source.
+          </li>
+          <li>
+            That meant two SQL dialects. The merge and update logic that worked on SQL Server
+            wasn&apos;t valid on DB2, and vice versa.
+          </li>
+          <li>
+            There was no time to hand-write, test, fix, and retest dozens of scripts — let alone
+            two dialects&apos; worth — before the cutover date.
           </li>
         </ul>
         <p>
-          So instead of writing the scripts, I wrote the thing that writes the scripts. In two
-          weeks I built a Python generator that takes metadata for each table in our EDI library —
-          field name, datatype, whether it&apos;s a key, whether it exists in 8.12 — and emits a
-          complete T-SQL <code className="text-gray-200 font-mono text-sm">MERGE</code> procedure
-          per table. Each procedure matches on the key fields, updates rows the translator
-          hasn&apos;t already flagged as processed (<code className="text-gray-200 font-mono text-sm">EDSP &lt;&gt; &apos;Y&apos;</code>),
-          inserts rows that don&apos;t exist yet, and supplies type-appropriate defaults for
-          columns the 8.12 source doesn&apos;t have.
+          So instead of writing the scripts, I wrote the things that write the scripts. In two
+          weeks I built a pair of Python generators over one shared metadata definition: for each
+          table in our EDI library I described the field name, datatype, whether it&apos;s a key,
+          and whether it exists in 8.12 — and each generator turned that same description into a
+          complete merge procedure in its own dialect.
         </p>
         <p>
-          That run produced 38 stored procedures. I deployed them on both servers and used SSIS
-          (today this would be Fabric Data Factory or similar) to run them on a schedule, keeping
-          the two systems in sync.
+          The semantics are identical on both sides. Match on the key fields; update rows the
+          translator hasn&apos;t already flagged as processed
+          (<code className="text-gray-200 font-mono text-sm">EDSP &lt;&gt; &apos;Y&apos;</code>);
+          insert rows that don&apos;t exist yet; supply type-appropriate defaults for columns the
+          source doesn&apos;t have. The syntax is not. The two platforms disagree on how a
+          procedure is declared and wrapped, how objects are qualified across databases and
+          libraries, and what&apos;s legal inside the statement body — so the emitted text diverges
+          substantially even though the intent is line-for-line the same.
+        </p>
+        <p>
+          Keeping the divergence in the generators rather than in the SQL is what made this
+          tractable. A change to the sync logic — a new default, a corrected key — was one edit to
+          the metadata or the emitter, then a regeneration of both sides. There was never a moment
+          where the SQL Server procedures and the DB2 procedures could drift apart by hand.
+        </p>
+        <p>
+          That covered 38 tables, with a procedure generated per table per platform. I deployed
+          them on both servers and used SSIS (today this would be Fabric Data Factory or similar)
+          to run them on a schedule, keeping the two systems in sync.
         </p>
       </div>
 
@@ -186,23 +215,29 @@ export default function EdiSyncPage() {
         generated procedures handled the staging &rarr; production merge.
       </p>
 
-      <Heading>The generator</Heading>
+      <Heading>The generators</Heading>
       <p className="text-gray-300 leading-relaxed">
-        The core loop, abridged. Each table&apos;s metadata drives the join keys, the update list,
-        and the defaults for unmatched columns.
+        Both generators read the same metadata and share the same shape: walk the tables, split
+        each table&apos;s fields into keys, mapped non-keys, and unmatched non-keys, then emit a
+        procedure. What differs is the text each one prints — the procedure declaration, the object
+        qualification, and the statement structure are dialect-specific.
+      </p>
+      <p className="text-gray-300 leading-relaxed mt-4">
+        The T-SQL core loop, abridged:
       </p>
       <CodeBlock>{generatorCode}</CodeBlock>
       <a
         href="/projects/edisync-sp-generator.py"
         className="inline-block mt-4 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
       >
-        View the full generator script &rarr;
+        View the full T-SQL generator script &rarr;
       </a>
 
       <Heading>Generated output</Heading>
       <p className="text-gray-300 leading-relaxed">
-        One of the 38 procedures, trimmed for length. The full set ran to roughly 175,000
-        characters of SQL.
+        One of the SQL Server procedures, trimmed for length. The DB2 generator produced the
+        matching procedure for the other end of the sync. The T-SQL set alone ran to roughly
+        175,000 characters.
       </p>
       <CodeBlock>{sqlSample}</CodeBlock>
 
